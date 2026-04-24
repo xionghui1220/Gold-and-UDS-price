@@ -17,15 +17,23 @@ const DEMO_DATA = {
         low: 1024.00,
         close: 1032.50,
         history7: [1035, 1033, 1030, 1028, 1032, 1029, 1027],
-        history30: Array.from({length: 30}, (_, i) => 1020 + Math.random() * 20)
+        history30: Array.from({length: 30}, (_, i) => 1020 + Math.random() * 20),
+        history365: Array.from({length: 52}, (_, i) => 1000 + Math.random() * 50)
     },
     usd: {
         rate: 7.2485,
         change: 0.0125,
         changePercent: 0.17,
         history7: [7.23, 7.24, 7.235, 7.25, 7.245, 7.248, 7.2485],
-        history30: Array.from({length: 30}, (_, i) => 7.20 + Math.random() * 0.10)
+        history30: Array.from({length: 30}, (_, i) => 7.20 + Math.random() * 0.10),
+        history365: Array.from({length: 52}, (_, i) => 7.15 + Math.random() * 0.15)
     }
+};
+
+// 历史数据缓存
+let historicalData = {
+    gold: { history7: [], history30: [], history365: [] },
+    usd: { history7: [], history30: [], history365: [] }
 };
 
 // 状态管理
@@ -99,11 +107,56 @@ async function fetchGoldData() {
         }
 
         const data = await response.json();
-        return parseGoldData(data);
+        const currentData = parseGoldData(data);
+
+        // 获取历史数据（使用模拟数据，因为GoldAPI免费版不支持历史数据）
+        await fetchHistoricalData(currentData.price);
+
+        return currentData;
     } catch (error) {
         console.error('获取黄金数据失败:', error);
         return null;
     }
+}
+
+// 获取历史数据
+async function fetchHistoricalData(currentPrice) {
+    // 由于GoldAPI免费版不支持历史数据，这里生成基于当前价格的模拟历史数据
+    // 7天数据：以当前价格为中心，上下浮动2%
+    historicalData.gold.history7 = generateRealisticHistory(currentPrice, 7, 0.02);
+    // 30天数据：以当前价格为中心，上下浮动5%
+    historicalData.gold.history30 = generateRealisticHistory(currentPrice, 30, 0.05);
+    // 365天数据：以当前价格为中心，上下浮动10%（按月显示，52个数据点）
+    historicalData.gold.history365 = generateRealisticHistory(currentPrice, 52, 0.10);
+
+    // 汇率历史数据（模拟）
+    historicalData.usd.history7 = generateRealisticHistory(7.25, 7, 0.005);
+    historicalData.usd.history30 = generateRealisticHistory(7.25, 30, 0.01);
+    historicalData.usd.history365 = generateRealisticHistory(7.25, 52, 0.03);
+}
+
+// 生成真实的历史数据（基于当前价格）
+function generateRealisticHistory(baseValue, days, volatility) {
+    const data = [];
+    let currentValue = baseValue * (1 - volatility); // 从较低值开始
+
+    for (let i = 0; i < days; i++) {
+        // 随机游走，但趋向于基准价格
+        const change = (Math.random() - 0.48) * volatility * baseValue;
+        currentValue += change;
+
+        // 确保价格在合理范围内
+        const minPrice = baseValue * (1 - volatility * 1.5);
+        const maxPrice = baseValue * (1 + volatility * 1.5);
+        currentValue = Math.max(minPrice, Math.min(maxPrice, currentValue));
+
+        data.push(parseFloat(currentValue.toFixed(2)));
+    }
+
+    // 最后一个值接近当前价格
+    data[data.length - 1] = parseFloat(baseValue.toFixed(2));
+
+    return data;
 }
 
 // 解析黄金数据
@@ -214,8 +267,19 @@ function updateChartData(gold, usd) {
     }
 
     const labels = generateDateLabels(currentRange);
-    const goldData = currentRange === 7 ? gold.history7 : gold.history30;
-    const usdData = currentRange === 7 ? usd.history7 : usd.history30;
+
+    // 优先使用缓存的历史数据，否则使用演示数据
+    let goldData, usdData;
+    if (currentRange === 7) {
+        goldData = historicalData.gold.history7.length > 0 ? historicalData.gold.history7 : gold.history7;
+        usdData = historicalData.usd.history7.length > 0 ? historicalData.usd.history7 : usd.history7;
+    } else if (currentRange === 30) {
+        goldData = historicalData.gold.history30.length > 0 ? historicalData.gold.history30 : gold.history30;
+        usdData = historicalData.usd.history30.length > 0 ? historicalData.usd.history30 : usd.history30;
+    } else {
+        goldData = historicalData.gold.history365.length > 0 ? historicalData.gold.history365 : gold.history365;
+        usdData = historicalData.usd.history365.length > 0 ? historicalData.usd.history365 : usd.history365;
+    }
 
     const ctx = document.getElementById('priceChart').getContext('2d');
     priceChart = new Chart(ctx, {
@@ -298,10 +362,19 @@ function updateChartData(gold, usd) {
 
 // 更新图表（切换时间范围时）
 function updateChart() {
-    // 在实际应用中，这里应该重新获取对应时间范围的数据
-    // 目前使用演示数据中的对应数组
-    const gold = DEMO_DATA.gold;
-    const usd = DEMO_DATA.usd;
+    // 使用缓存的历史数据和当前数据
+    const gold = {
+        ...DEMO_DATA.gold,
+        history7: historicalData.gold.history7.length > 0 ? historicalData.gold.history7 : DEMO_DATA.gold.history7,
+        history30: historicalData.gold.history30.length > 0 ? historicalData.gold.history30 : DEMO_DATA.gold.history30,
+        history365: historicalData.gold.history365.length > 0 ? historicalData.gold.history365 : DEMO_DATA.gold.history365
+    };
+    const usd = {
+        ...DEMO_DATA.usd,
+        history7: historicalData.usd.history7.length > 0 ? historicalData.usd.history7 : DEMO_DATA.usd.history7,
+        history30: historicalData.usd.history30.length > 0 ? historicalData.usd.history30 : DEMO_DATA.usd.history30,
+        history365: historicalData.usd.history365.length > 0 ? historicalData.usd.history365 : DEMO_DATA.usd.history365
+    };
     updateChartData(gold, usd);
 }
 
@@ -310,10 +383,20 @@ function generateDateLabels(days) {
     const labels = [];
     const today = new Date();
 
-    for (let i = days - 1; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        labels.push(`${date.getMonth() + 1}/${date.getDate()}`);
+    if (days === 365) {
+        // 年视图：按月显示
+        for (let i = 11; i >= 0; i--) {
+            const date = new Date(today);
+            date.setMonth(date.getMonth() - i);
+            labels.push(`${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}`);
+        }
+    } else {
+        // 7天或30天视图
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            labels.push(`${date.getMonth() + 1}/${date.getDate()}`);
+        }
     }
 
     return labels;
