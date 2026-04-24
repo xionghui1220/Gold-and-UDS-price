@@ -112,9 +112,13 @@ function parseGoldData(data) {
     // 1金衡盎司 = 31.1035克
     const ounceToGram = 31.1035;
 
-    const pricePerGram = (data.price_gram_24k || data.price / ounceToGram);
-    const openPerGram = (data.open_price ? data.open_price / ounceToGram : pricePerGram);
-    const prevClosePerGram = (data.prev_close_price ? data.prev_close_price / ounceToGram : pricePerGram);
+    // 优先使用 price_gram_24k（每克价格），如果不存在则手动转换
+    const pricePerGram = data.price_gram_24k && data.price_gram_24k > 0
+        ? data.price_gram_24k
+        : data.price / ounceToGram;
+
+    const openPerGram = data.open_price ? data.open_price / ounceToGram : pricePerGram;
+    const prevClosePerGram = data.prev_close_price ? data.prev_close_price / ounceToGram : pricePerGram;
     const change = pricePerGram - prevClosePerGram;
     const changePercent = prevClosePerGram > 0 ? (change / prevClosePerGram * 100) : 0;
 
