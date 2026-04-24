@@ -1,6 +1,6 @@
 // API配置 - 请替换为您的API密钥
-const GOLD_API_KEY = 'YOUR_GOLD_API_KEY_HERE';
-const EXCHANGE_API_KEY = 'YOUR_EXCHANGE_API_KEY_HERE';
+const GOLD_API_KEY = 'goldapi-2b9bb507251ab46b460eaa36df9594e0-io';
+const EXCHANGE_API_KEY = '';
 
 // API端点
 const GOLD_API_URL = 'https://www.goldapi.io/api/XAU/CNY';
