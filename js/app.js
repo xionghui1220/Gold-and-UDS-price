@@ -123,8 +123,8 @@ function parseGoldData(data) {
         change: change,
         changePercent: changePercent,
         open: openPerGram,
-        high: data.low_price ? data.low_price / ounceToGram : pricePerGram,
-        low: data.high_price ? data.high_price / ounceToGram : pricePerGram,
+        high: data.high_price ? data.high_price / ounceToGram : pricePerGram,
+        low: data.low_price ? data.low_price / ounceToGram : pricePerGram,
         close: prevClosePerGram
     };
 }
