@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>黄金/美元汇率追踪</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>黄金/美元汇率追踪</h1>
+            <p class="last-update">最后更新：<span id="lastUpdate">--</span></p>
+        </header>
+
+        <div class="status-bar" id="statusBar">
+            <span id="statusText">正在加载数据...</span>
+        </div>
+
+        <div class="overview-grid">
+            <div class="card gold-card">
+                <div class="card-header">
+                    <h2>黄金价格 (CNY/克)</h2>
+                    <span class="trend-badge" id="goldTrend">--</span>
+                </div>
+                <div class="price-display" id="goldPrice">--.--</div>
+                <div class="change-display" id="goldChange">--.-- (--.--%)</div>
+            </div>
+
+            <div class="card usd-card">
+                <div class="card-header">
+                    <h2>美元汇率 (USD/CNY)</h2>
+                    <span class="trend-badge" id="usdTrend">--</span>
+                </div>
+                <div class="price-display" id="usdRate">--.----</div>
+                <div class="change-display" id="usdChange">--.---- (--.--%)</div>
+            </div>
+        </div>
+
+        <div class="card detail-card">
+            <h3>详细数据</h3>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="label">今日开盘</span>
+                    <span class="value" id="goldOpen">--.--</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">今日最高</span>
+                    <span class="value" id="goldHigh">--.--</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">今日最低</span>
+                    <span class="value" id="goldLow">--.--</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">昨日收盘</span>
+                    <span class="value" id="goldClose">--.--</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card chart-card">
+            <div class="chart-header">
+                <h3>价格趋势</h3>
+                <div class="chart-controls">
+                    <button class="time-range-btn active" data-range="7">7天</button>
+                    <button class="time-range-btn" data-range="30">30天</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="priceChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card refresh-card">
+            <button id="refreshBtn" class="refresh-btn">刷新数据</button>
+            <p class="demo-notice">当前显示的是演示数据。请配置API密钥以获取实时数据。</p>
+        </div>
+
+        <footer>
+            <p>数据来源：公开API | <a href="https://github.com/username/gold-usd-tracker" target="_blank">GitHub</a></p>
+        </footer>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
