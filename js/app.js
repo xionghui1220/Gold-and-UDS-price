@@ -6,18 +6,18 @@ const EXCHANGE_API_KEY = '';
 const GOLD_API_URL = 'https://www.goldapi.io/api/XAU/CNY';
 const EXCHANGE_API_URL = 'https://open.er-api.com/v6/latest/USD';
 
-// 演示数据
+// 演示数据（价格接近真实值：约1027 CNY/克）
 const DEMO_DATA = {
     gold: {
-        price: 485.50,
-        change: 3.25,
-        changePercent: 0.67,
-        open: 482.25,
-        high: 487.80,
-        low: 481.50,
-        close: 482.25,
-        history7: [480, 482, 479, 483, 485, 484, 485.50],
-        history30: Array.from({length: 30}, (_, i) => 470 + Math.random() * 20)
+        price: 1027.00,
+        change: -5.50,
+        changePercent: -0.53,
+        open: 1032.50,
+        high: 1035.00,
+        low: 1024.00,
+        close: 1032.50,
+        history7: [1035, 1033, 1030, 1028, 1032, 1029, 1027],
+        history30: Array.from({length: 30}, (_, i) => 1020 + Math.random() * 20)
     },
     usd: {
         rate: 7.2485,
@@ -108,15 +108,24 @@ async function fetchGoldData() {
 
 // 解析黄金数据
 function parseGoldData(data) {
-    // 根据实际API响应格式调整
+    // GoldAPI返回的是每金衡盎司价格，需要转换为每克价格
+    // 1金衡盎司 = 31.1035克
+    const ounceToGram = 31.1035;
+
+    const pricePerGram = (data.price_gram_24k || data.price / ounceToGram);
+    const openPerGram = (data.open_price ? data.open_price / ounceToGram : pricePerGram);
+    const prevClosePerGram = (data.prev_close_price ? data.prev_close_price / ounceToGram : pricePerGram);
+    const change = pricePerGram - prevClosePerGram;
+    const changePercent = prevClosePerGram > 0 ? (change / prevClosePerGram * 100) : 0;
+
     return {
-        price: data.price || data.current_price,
-        change: data.change || 0,
-        changePercent: data.change_percent || 0,
-        open: data.open || data.opening_price,
-        high: data.high || data.high_price,
-        low: data.low || data.low_price,
-        close: data.previous_close || data.closing_price
+        price: pricePerGram,
+        change: change,
+        changePercent: changePercent,
+        open: openPerGram,
+        high: data.low_price ? data.low_price / ounceToGram : pricePerGram,
+        low: data.high_price ? data.high_price / ounceToGram : pricePerGram,
+        close: prevClosePerGram
     };
 }
 
