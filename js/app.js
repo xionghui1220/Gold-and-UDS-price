@@ -121,7 +121,16 @@ async function fetchGoldData() {
 
 // 获取历史数据
 async function fetchHistoricalData(currentPrice) {
-    // 由于GoldAPI免费版不支持历史数据，这里生成基于当前价格的模拟历史数据
+    // 如果已有缓存的历史数据，不重新生成（保持一致性）
+    if (historicalData.gold.history7.length > 0) {
+        // 只更新最后一个值为当前价格
+        historicalData.gold.history7[historicalData.gold.history7.length - 1] = parseFloat(currentPrice.toFixed(2));
+        historicalData.gold.history30[historicalData.gold.history30.length - 1] = parseFloat(currentPrice.toFixed(2));
+        historicalData.gold.history365[historicalData.gold.history365.length - 1] = parseFloat(currentPrice.toFixed(2));
+        return;
+    }
+
+    // 首次加载时生成历史数据
     // 7天数据：以当前价格为中心，上下浮动2%
     historicalData.gold.history7 = generateRealisticHistory(currentPrice, 7, 0.02);
     // 30天数据：以当前价格为中心，上下浮动5%
